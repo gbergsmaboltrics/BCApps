@@ -83,6 +83,7 @@ codeunit 6231 "E-Document MLLM Handler" implements IStructureReceivedEDocument, 
         CustomDimensions: Dictionary of [Text, Text];
         InStream: InStream;
         Base64Data: Text;
+        DeploymentName: Text;
         StartTime: DateTime;
         DurationMs: Integer;
     begin
@@ -92,7 +93,8 @@ codeunit 6231 "E-Document MLLM Handler" implements IStructureReceivedEDocument, 
         Base64Data := Base64Convert.ToBase64(InStream);
 
         // Build AOAI call
-        AzureOpenAI.SetAuthorization(Enum::"AOAI Model Type"::"Chat Completions", AOAIDeployments.GetGPT41MiniPreview());
+        DeploymentName := AOAIDeployments.GetGPT56CeresPreview();
+        AzureOpenAI.SetAuthorization(Enum::"AOAI Model Type"::"Chat Completions", DeploymentName);
         AzureOpenAI.SetCopilotCapability(Enum::"Copilot Capability"::"E-Document MLLM Analysis");
 
         AOAIChatCompletionParams.SetTemperature(0);
@@ -110,6 +112,7 @@ codeunit 6231 "E-Document MLLM Handler" implements IStructureReceivedEDocument, 
 
         CustomDimensions := GetCustomDimensions();
         CustomDimensions.Add('DurationMs', Format(DurationMs));
+        CustomDimensions.Add('Model', DeploymentName);
 
         if not AOAIOperationResponse.IsSuccess() then begin
             Telemetry.LogMessage('0000SGS', MLLMApiCallFailedMsg, Verbosity::Warning, DataClassification::SystemMetadata, TelemetryScope::All, CustomDimensions);

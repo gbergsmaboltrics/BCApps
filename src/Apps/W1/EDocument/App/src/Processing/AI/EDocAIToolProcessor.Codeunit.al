@@ -38,6 +38,7 @@ codeunit 6195 "E-Doc. AI Tool Processor"
     procedure Setup(EDocAISystem: Interface IEDocAISystem): Boolean
     var
         CopilotCapability: Codeunit "Copilot Capability";
+        DeploymentName: Text;
     begin
         Clear(TelemetryDimensions);
 
@@ -48,8 +49,9 @@ codeunit 6195 "E-Doc. AI Tool Processor"
         if not CopilotCapability.IsCapabilityActive(Enum::"Copilot Capability"::"E-Document Matching Assistance") then
             exit(false);
 
-        // Setup Azure OpenAI
-        AzureOpenAI.SetAuthorization(Enum::"AOAI Model Type"::"Chat Completions", GetDefaultModel());
+        // Use the same GPT-5.6 deployment for authorization and telemetry.
+        DeploymentName := GetDefaultModel();
+        AzureOpenAI.SetAuthorization(Enum::"AOAI Model Type"::"Chat Completions", DeploymentName);
         AzureOpenAI.SetCopilotCapability(Enum::"Copilot Capability"::"E-Document Matching Assistance");
 
         // Setup parameters
@@ -61,7 +63,7 @@ codeunit 6195 "E-Doc. AI Tool Processor"
         SetupChatMessages();
 
         // Setup telemetry
-        TelemetryDimensions.Add('Model', GetDefaultModel());
+        TelemetryDimensions.Add('Model', DeploymentName);
         TelemetryDimensions.Add('MaxTokens', Format(GetDefaultMaxOutputTokens()));
         TelemetryDimensions.Add('Temperature', Format(GetDefaultTemperature()));
 
@@ -245,7 +247,7 @@ codeunit 6195 "E-Doc. AI Tool Processor"
     var
         AOAIDeployments: Codeunit "AOAI Deployments";
     begin
-        exit(AOAIDeployments.GetGPT41Latest());
+        exit(AOAIDeployments.GetGPT56CeresLatest());
     end;
 
     procedure GetEDocumentMatchingAssistanceName(): Text
